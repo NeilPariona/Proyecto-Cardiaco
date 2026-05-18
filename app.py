@@ -6,202 +6,209 @@ import pandas as pd
 # Configuración de la página
 st.set_page_config(
     page_title="CardioRisk | Evaluación Cardiovascular",
-    page_icon="🏥",
+    page_icon="🌸",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# ========== ESTILOS CSS PROFESIONALES ==========
+# ========== ESTILOS CSS - PALETA PASTEL ==========
 st.markdown("""
 <style>
-    /* Fondo institucional */
+    /* Fondo principal pastel */
     .stApp {
-        background: #f4f6f9;
+        background: linear-gradient(135deg, #fef9f0 0%, #f0f7f4 100%);
     }
     
     /* Tarjeta base */
     .card {
-        background: white;
-        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(2px);
+        border-radius: 24px;
         padding: 20px;
         margin-bottom: 20px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        border: 1px solid rgba(200, 200, 200, 0.2);
     }
     
     /* Tarjeta de resultado */
     .result-card {
-        background: white;
-        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 28px;
         padding: 24px;
         text-align: center;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-        border: 1px solid #e2e8f0;
+        box-shadow: 0 6px 14px rgba(0,0,0,0.02);
+        border: 1px solid rgba(210, 210, 210, 0.3);
         height: 100%;
+        transition: all 0.2s ease;
+    }
+    
+    .result-card:hover {
+        transform: translateY(-2px);
+        background: white;
+        box-shadow: 0 12px 24px rgba(0,0,0,0.05);
     }
     
     .card-title {
         font-size: 14px;
         font-weight: 600;
-        color: #4a5568;
+        color: #8b9a9b;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 1px;
         margin-bottom: 12px;
     }
     
     .metric-value {
-        font-size: 36px;
+        font-size: 38px;
         font-weight: 700;
-        color: #1a202c;
+        margin: 12px 0;
     }
     
     .metric-sub {
         font-size: 13px;
-        color: #718096;
+        color: #8ba0a1;
         margin-top: 8px;
     }
     
+    /* Colores pastel para riesgos */
     .risk-low {
-        color: #2ecc71;
+        color: #7fada3;
     }
-    
     .risk-moderate {
-        color: #f39c12;
+        color: #e4b363;
     }
-    
     .risk-high {
-        color: #e74c3c;
+        color: #e28b7a;
     }
     
-    /* Barra de probabilidad */
+    /* Badges pastel */
+    .badge {
+        display: inline-block;
+        padding: 4px 14px;
+        border-radius: 40px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+    .badge-low { background: #e2f0ec; color: #5f9d93; }
+    .badge-moderate { background: #fef1df; color: #c9943a; }
+    .badge-high { background: #fee9e4; color: #cc7b6a; }
+    
+    /* Barra de probabilidad pastel */
     .prob-bar-container {
-        background: #edf2f7;
-        border-radius: 8px;
-        height: 6px;
-        margin: 12px 0;
+        background: #ecf0ef;
+        border-radius: 20px;
+        height: 8px;
+        margin: 16px 0;
         overflow: hidden;
     }
-    
     .prob-bar-fill {
         height: 100%;
-        border-radius: 8px;
+        border-radius: 20px;
         width: 0%;
         transition: width 0.3s ease;
     }
+    .prob-bar-fill.low { background: #7fada3; }
+    .prob-bar-fill.moderate { background: #e4b363; }
+    .prob-bar-fill.high { background: #e28b7a; }
     
-    .prob-bar-fill.low { background: #2ecc71; }
-    .prob-bar-fill.moderate { background: #f39c12; }
-    .prob-bar-fill.high { background: #e74c3c; }
-    
-    /* Header principal */
+    /* Header */
     .main-header {
         background: white;
-        padding: 20px 24px;
-        border-radius: 12px;
-        margin-bottom: 24px;
-        border: 1px solid #e2e8f0;
+        padding: 24px 28px;
+        border-radius: 32px;
+        margin-bottom: 28px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        border: 1px solid #f0eae3;
     }
-    
     .main-header h1 {
-        font-size: 24px;
+        font-size: 26px;
         font-weight: 600;
-        color: #1a202c;
+        color: #5f7c7a;
         margin: 0;
     }
-    
     .main-header p {
-        color: #718096;
-        margin: 4px 0 0;
+        color: #b2c2c0;
+        margin: 6px 0 0;
         font-size: 14px;
     }
     
-    /* Sidebar */
+    /* Sidebar pastel */
     [data-testid="stSidebar"] {
-        background: white;
-        border-right: 1px solid #e2e8f0;
+        background: #ffffffdd;
+        backdrop-filter: blur(10px);
+        border-right: 1px solid #f0eae3;
     }
-    
     [data-testid="stSidebar"] .sidebar-content {
         padding: 20px;
     }
+    [data-testid="stSidebar"] h1, 
+    [data-testid="stSidebar"] h2, 
+    [data-testid="stSidebar"] h3 {
+        color: #7f9e9b;
+        font-weight: 500;
+    }
     
-    /* Inputs */
+    /* Inputs pastel */
     .stSlider > div > div > div {
-        background: #3182ce;
+        background: #bdd4cf;
     }
-    
     .stSelectbox > div > div, .stNumberInput > div > div {
-        border-radius: 8px;
-        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        border: 1px solid #e6dfd7;
+        background: white;
     }
-    
     label {
-        color: #4a5568 !important;
+        color: #8ba7a4 !important;
         font-weight: 500 !important;
         font-size: 13px !important;
     }
     
-    /* Botón principal */
+    /* Botón pastel */
     .stButton > button {
-        background: #3182ce;
-        color: white;
+        background: #c7dfda;
+        color: #4f6e6b;
         font-size: 15px;
         font-weight: 500;
         padding: 10px 20px;
-        border-radius: 8px;
+        border-radius: 40px;
         border: none;
         width: 100%;
-        transition: background 0.2s;
+        transition: all 0.2s;
     }
-    
     .stButton > button:hover {
-        background: #2c5282;
+        background: #b5cfc9;
+        color: #2d4a47;
+        transform: scale(0.98);
     }
     
     /* Footer */
     .footer {
         text-align: center;
-        margin-top: 40px;
+        margin-top: 48px;
         padding: 20px;
-        background: white;
-        border-radius: 12px;
-        color: #718096;
+        background: rgba(255,255,255,0.7);
+        border-radius: 28px;
+        color: #a2bbb8;
         font-size: 12px;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #efe6de;
     }
-    
     .footer a {
-        color: #3182ce;
+        color: #8bb4af;
         text-decoration: none;
     }
     
-    /* Divider */
     hr {
-        margin: 20px 0;
+        margin: 24px 0;
         border: none;
-        border-top: 1px solid #e2e8f0;
+        border-top: 1px solid #e8e0d8;
     }
-    
-    /* Badge de riesgo */
-    .badge {
-        display: inline-block;
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 600;
-    }
-    
-    .badge-low { background: #e8f8f5; color: #2ecc71; }
-    .badge-moderate { background: #fef5e7; color: #f39c12; }
-    .badge-high { background: #fdedec; color: #e74c3c; }
 </style>
 """, unsafe_allow_html=True)
 
 # ========== HEADER ==========
 st.markdown("""
 <div class="main-header">
-    <h1>🏥 CardioRisk | Evaluación de Riesgo Cardiovascular</h1>
-    <p>Herramienta clínica de apoyo basada en Machine Learning · Heart Disease UCI Dataset</p>
+    <h1>🌸 CardioRisk | Evaluación Cardiovascular</h1>
+    <p>Herramienta clínica de apoyo · Basada en Machine Learning</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -214,7 +221,7 @@ with st.sidebar:
     sex = st.radio("Sexo", ["Femenino", "Masculino"], horizontal=True)
     sex = 1 if sex == "Masculino" else 0
     
-    st.markdown("### ❤️ Síntomas y Signos Vitales")
+    st.markdown("### ❤️ Síntomas y Signos")
     
     cp = st.selectbox("Tipo de dolor torácico", [
         "Asintomático", "Angina atípica", "Angina no anginal", "Angina típica"
@@ -228,8 +235,7 @@ with st.sidebar:
     with col_sb2:
         chol = st.number_input("Colesterol (mg/dl)", min_value=100, max_value=400, value=200)
     
-    st.markdown("### 📊 Estudios Complementarios")
-    
+    st.markdown("### 📊 Estudios")
     fbs = st.radio("Glucemia basal > 120 mg/dl", ["No", "Sí"], horizontal=True)
     fbs = 1 if fbs == "Sí" else 0
     
@@ -241,7 +247,7 @@ with st.sidebar:
     exang = st.radio("Angina inducida por ejercicio", ["No", "Sí"], horizontal=True)
     exang = 1 if exang == "Sí" else 0
 
-# ========== COLUMNAS CAMPOS RESTANTES ==========
+# ========== COLUMNAS ==========
 col1, col2 = st.columns(2)
 
 with col1:
@@ -288,7 +294,6 @@ if predecir:
     if modelo_rf is None:
         st.error("❌ Error: No se pudieron cargar los modelos. Verifique la carpeta 'modelos'.")
     else:
-        # Construir features
         features = np.array([[
             age, sex, cp, trestbps, chol, fbs, restecg, 
             thalach, exang, oldpeak, slope, ca, thal
@@ -296,7 +301,6 @@ if predecir:
         
         features_scaled = scaler.transform(features)
         
-        # Predicciones
         pred_rf = modelo_rf.predict(features_scaled)[0]
         pred_svm = modelo_svm.predict(features_scaled)[0]
         
@@ -307,7 +311,6 @@ if predecir:
         riesgo_svm = proba_svm[1] * 100
         riesgo_promedio = (riesgo_rf + riesgo_svm) / 2
         
-        # Determinar nivel de riesgo
         if riesgo_promedio < 30:
             risk_level = "Bajo"
             risk_class = "low"
@@ -327,7 +330,6 @@ if predecir:
         st.markdown("---")
         st.markdown("## 📋 Resultados de la Evaluación")
         
-        # Fila de resultados
         col_r1, col_r2, col_r3 = st.columns(3)
         
         with col_r1:
@@ -368,26 +370,24 @@ if predecir:
             </div>
             """, unsafe_allow_html=True)
         
-        # Recomendación clínica
         st.markdown('<div class="card" style="margin-top: 20px;">', unsafe_allow_html=True)
         st.markdown("#### 📋 Recomendación Clínica")
-        
         if riesgo_promedio >= 70:
-            st.warning("""
+            st.info("""
             **⚠️ Riesgo Cardiovascular Alto**  
             - Se recomienda evaluación por cardiología en los próximos 7 días.  
-            - Considerar estudios complementarios: ecocardiograma, prueba de esfuerzo.  
+            - Considerar estudios complementarios.  
             - Evaluar factores de riesgo modificables.
             """)
         elif riesgo_promedio >= 40:
             st.info("""
             **🟡 Riesgo Cardiovascular Moderado**  
             - Programar control en 1-3 meses.  
-            - Promover cambios en estilo de vida: dieta, ejercicio, control de estrés.  
+            - Promover cambios en estilo de vida.  
             - Monitorear presión arterial y perfil lipídico.
             """)
         else:
-            st.success("""
+            st.info("""
             **🟢 Riesgo Cardiovascular Bajo**  
             - Mantener controles periódicos anuales.  
             - Continuar con hábitos de vida saludables.  
@@ -400,7 +400,7 @@ st.markdown(f"""
 <div class="footer">
     <p>🔗 <a href="https://colab.research.google.com/drive/1uo0Sb4xdyYNEVlsn71h-7_QYlIFdNIPP?usp=sharing" target="_blank">📓 Cuaderno de desarrollo en Google COLAB</a></p>
     <p><strong>Neil Pariona</strong> | Código ISIL: 6816</p>
-    <p>Modelos entrenados con Heart Disease UCI Dataset · Random Forest & Support Vector Machine</p>
+    <p>Heart Disease UCI Dataset · Random Forest & Support Vector Machine</p>
     <p>© 2026 - Herramienta de apoyo diagnóstico. No reemplaza criterio médico.</p>
 </div>
 """, unsafe_allow_html=True)
