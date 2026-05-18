@@ -2,106 +2,144 @@ import streamlit as st
 import joblib
 import numpy as np
 import pandas as pd
-from PIL import Image
-import base64
 
 # Configuración de la página (DEBE SER EL PRIMER COMANDO)
 st.set_page_config(
-    page_title="CardioPredict - Enfermedad Cardíaca",
-    page_icon="❤️",
+    page_title="Solo Leveling - Cardio Predictor",
+    page_icon="⚔️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# ========== ESTILOS CSS PERSONALIZADOS ==========
+# ========== ESTILOS CSS - TEMÁTICA SOLO LEVELING ==========
 st.markdown("""
 <style>
-    /* Fondo y colores principales */
+    /* Fondo principal oscuro - estilo solo leveling */
     .stApp {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0f0f1a 100%);
     }
     
-    /* Tarjetas de resultados */
+    /* Fondo de los widgets */
+    .stApp > header {
+        background: rgba(0,0,0,0.8);
+    }
+    
+    /* Tarjetas de resultados - estilo sombra/oscuro */
     .result-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 20px;
+        background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1a 100%);
+        border-radius: 15px;
         padding: 25px;
         text-align: center;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        box-shadow: 0 0 20px rgba(0,255,255,0.2);
+        border: 1px solid rgba(0,255,255,0.3);
         color: white;
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    
+    .result-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0 30px rgba(0,255,255,0.4);
+        border-color: #00ffff;
     }
     
     .result-title {
         font-size: 24px;
         font-weight: bold;
         margin-bottom: 15px;
+        font-family: monospace;
+        text-shadow: 0 0 5px cyan;
     }
     
     .result-value {
-        font-size: 48px;
+        font-size: 42px;
         font-weight: bold;
         margin: 15px 0;
+        font-family: monospace;
     }
     
     .probability {
         font-size: 18px;
-        background: rgba(255,255,255,0.2);
+        background: rgba(0,255,255,0.1);
         border-radius: 50px;
         padding: 8px;
         margin-top: 10px;
+        border: 1px solid cyan;
     }
     
     /* Encabezado principal */
     .main-header {
         text-align: center;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
         padding: 30px;
-        border-radius: 30px;
+        border-radius: 20px;
         margin-bottom: 30px;
         color: white;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        box-shadow: 0 0 30px rgba(0,255,255,0.2);
+        border: 1px solid rgba(0,255,255,0.5);
     }
     
     .main-header h1 {
-        font-size: 48px;
+        font-size: 54px;
         margin-bottom: 10px;
+        font-family: monospace;
+        text-shadow: 0 0 10px cyan, 0 0 20px blue;
+        letter-spacing: 3px;
     }
     
     .main-header p {
-        font-size: 18px;
+        font-size: 16px;
         opacity: 0.9;
+        color: #aaa;
     }
     
     /* Tarjeta de entrada de datos */
     .input-card {
-        background: rgba(255,255,255,0.95);
-        border-radius: 25px;
-        padding: 25px;
+        background: rgba(10,10,26,0.7);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 20px;
         margin-bottom: 20px;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+        border: 1px solid rgba(0,255,255,0.3);
     }
     
     /* Botón de predicción */
     .stButton > button {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
+        background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+        color: cyan;
         font-size: 20px;
         font-weight: bold;
         padding: 15px 40px;
         border-radius: 50px;
-        border: none;
+        border: 2px solid cyan;
         width: 100%;
-        transition: transform 0.3s;
+        transition: all 0.3s;
+        font-family: monospace;
     }
     
     .stButton > button:hover {
         transform: scale(1.02);
-        background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        background: cyan;
+        color: black;
+        box-shadow: 0 0 30px cyan;
+        border-color: black;
     }
     
     /* Sliders personalizados */
     .stSlider > div > div > div {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: cyan;
+    }
+    
+    /* Select boxes */
+    .stSelectbox > div > div {
+        background: #0a0a0a;
+        color: cyan;
+        border-color: cyan;
+    }
+    
+    /* Radio buttons */
+    .stRadio > div {
+        color: white;
     }
     
     /* Información del estudiante */
@@ -109,45 +147,65 @@ st.markdown("""
         text-align: center;
         margin-top: 50px;
         padding: 20px;
-        background: rgba(0,0,0,0.2);
+        background: rgba(0,0,0,0.7);
         border-radius: 20px;
-        color: white;
+        color: #aaa;
+        border: 1px solid rgba(0,255,255,0.2);
     }
     
     /* Sidebar */
-    .css-1d391kg {
-        background: rgba(0,0,0,0.1);
+    [data-testid="stSidebar"] {
+        background: rgba(0,0,0,0.8);
+        backdrop-filter: blur(10px);
+        border-right: 2px solid cyan;
+    }
+    
+    /* Títulos dentro del sidebar */
+    [data-testid="stSidebar"] h1, 
+    [data-testid="stSidebar"] h2, 
+    [data-testid="stSidebar"] h3 {
+        color: cyan;
+        font-family: monospace;
+    }
+    
+    /* Labels */
+    label {
+        color: cyan !important;
+        font-family: monospace !important;
+    }
+    
+    /* Números de los sliders */
+    .stSlider label {
+        color: white !important;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# ========== HEADER PRINCIPAL ==========
+# ========== HEADER PRINCIPAL - ESTILO SOLO LEVELING ==========
 st.markdown("""
 <div class="main-header">
-    <h1>❤️ CardioPredict</h1>
-    <p>Predicción inteligente de enfermedad cardíaca basada en Machine Learning</p>
-    <p style="font-size:14px; opacity:0.8;">Random Forest & SVM - Modelos entrenados con datos clínicos reales</p>
+    <h1>⚔️ SHADOW SOLDIER ⚔️</h1>
+    <h2 style="color:cyan; font-family:monospace;">CARDIO PREDICTOR</h2>
+    <p>「 El sistema de evaluación del gremio - Predicción de enfermedad cardíaca 」</p>
+    <p style="font-size:12px;">Modelos: Random Forest | SVM — Basado en datos clínicos reales</p>
 </div>
 """, unsafe_allow_html=True)
 
 # ========== SIDEBAR ==========
 with st.sidebar:
-    st.markdown("## 📊 Información del Paciente")
+    st.markdown("## 🧬 PERFIL DEL CAZADOR")
     st.markdown("---")
     
-    # Datos personales
-    st.markdown("### 👤 Datos Personales")
-    age = st.slider("📅 Edad", 20, 100, 50, help="Edad del paciente en años")
+    st.markdown("### 👤 DATOS BÁSICOS")
+    age = st.slider("📅 EDAD", 20, 100, 50, help="Rango de edad del cazador")
     
-    sex = st.radio("⚥ Sexo", ["Femenino", "Masculino"], horizontal=True)
+    sex = st.radio("⚥ GÉNERO", ["Femenino", "Masculino"], horizontal=True)
     sex = 1 if sex == "Masculino" else 0
     
     st.markdown("---")
+    st.markdown("### ❤️ SÍNTOMAS")
     
-    # Datos clínicos principales
-    st.markdown("### ❤️ Síntomas y Signos")
-    
-    cp = st.selectbox("💢 Tipo de dolor de pecho", [
+    cp = st.selectbox("💢 DOLOR DE PECHO", [
         "Asintomático", 
         "Angina atípica", 
         "Angina no anginal", 
@@ -156,19 +214,16 @@ with st.sidebar:
     cp_map = {"Asintomático": 0, "Angina atípica": 1, "Angina no anginal": 2, "Angina típica": 3}
     cp = cp_map[cp]
     
-    trestbps = st.slider("📏 Presión arterial en reposo (mm Hg)", 80, 200, 120, help="Valor normal: 120")
-    
-    chol = st.slider("🩸 Colesterol sérico (mg/dl)", 100, 400, 200, help="Valor normal: <200")
+    trestbps = st.slider("📏 PRESIÓN ARTERIAL", 80, 200, 120, help="mm Hg - Valor normal: 120")
+    chol = st.slider("🩸 COLESTEROL", 100, 400, 200, help="mg/dl - Valor normal: <200")
     
     st.markdown("---")
+    st.markdown("### 📊 ESTADOS AVANZADOS")
     
-    # Medidas avanzadas
-    st.markdown("### 📈 Medidas Avanzadas")
-    
-    fbs = st.radio("🍬 Azúcar en sangre en ayunas > 120 mg/dl", ["No", "Sí"], horizontal=True)
+    fbs = st.radio("🍬 AZÚCAR EN AYUNAS >120", ["No", "Sí"], horizontal=True)
     fbs = 1 if fbs == "Sí" else 0
     
-    restecg = st.selectbox("📊 Electrocardiograma en reposo", [
+    restecg = st.selectbox("📈 ELECTROCARDIOGRAMA", [
         "Normal", 
         "Anomalía ST-T", 
         "Hipertrofia ventricular"
@@ -176,9 +231,8 @@ with st.sidebar:
     restecg_map = {"Normal": 0, "Anomalía ST-T": 1, "Hipertrofia ventricular": 2}
     restecg = restecg_map[restecg]
     
-    thalach = st.slider("🏃 Frecuencia cardíaca máxima", 60, 220, 150, help="Frecuencia máxima alcanzada durante ejercicio")
-    
-    exang = st.radio("🏋️ Angina inducida por ejercicio", ["No", "Sí"], horizontal=True)
+    thalach = st.slider("🏃 FRECUENCIA CARDÍACA MÁX", 60, 220, 150)
+    exang = st.radio("⚡ ANGINA POR EJERCICIO", ["No", "Sí"], horizontal=True)
     exang = 1 if exang == "Sí" else 0
 
 # ========== COLUMNAS PARA MÁS CAMPOS ==========
@@ -186,28 +240,22 @@ col1, col2 = st.columns(2)
 
 with col1:
     st.markdown('<div class="input-card">', unsafe_allow_html=True)
-    st.markdown("### 🔬 Parámetros Específicos")
+    st.markdown("### 🔬 PARÁMETROS AVANZADOS")
     
-    oldpeak = st.slider("📉 Depresión ST inducida por ejercicio", 0.0, 6.0, 1.0, step=0.1, 
-                        help="Indica depresión del segmento ST")
-    
-    slope = st.selectbox("📐 Pendiente del segmento ST", ["Ascendente", "Plana", "Descendente"])
+    oldpeak = st.slider("📉 DEPRESIÓN ST", 0.0, 6.0, 1.0, step=0.1)
+    slope = st.selectbox("📐 PENDIENTE ST", ["Ascendente", "Plana", "Descendente"])
     slope_map = {"Ascendente": 0, "Plana": 1, "Descendente": 2}
     slope = slope_map[slope]
-    
     st.markdown('</div>', unsafe_allow_html=True)
 
 with col2:
     st.markdown('<div class="input-card">', unsafe_allow_html=True)
-    st.markdown("### 🫀 Hallazgos Clínicos")
+    st.markdown("### 🫀 HALLAZGOS")
     
-    ca = st.slider("🔬 Vasos coloreados (0-3)", 0, 3, 0, 
-                   help="Número de vasos principales coloreados por fluoroscopia")
-    
-    thal = st.selectbox("💊 Talasemia", ["Normal", "Defecto fijo", "Defecto reversible"])
+    ca = st.slider("🔬 VASOS COLOREADOS", 0, 3, 0)
+    thal = st.selectbox("💊 TALASEMIA", ["Normal", "Defecto fijo", "Defecto reversible"])
     thal_map = {"Normal": 1, "Defecto fijo": 2, "Defecto reversible": 3}
     thal = thal_map[thal]
-    
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ========== BOTÓN DE PREDICCIÓN ==========
@@ -215,7 +263,7 @@ st.markdown("<br>", unsafe_allow_html=True)
 
 col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
 with col_btn2:
-    predecir = st.button("🔍 PREDECIR RIESGO CARDÍACO", use_container_width=True)
+    predecir = st.button("🔮 EJECUTAR ANÁLISIS DEL SISTEMA", use_container_width=True)
 
 # ========== CARGAR MODELOS ==========
 @st.cache_resource
@@ -233,77 +281,73 @@ modelo_rf, modelo_svm, scaler = cargar_modelos()
 # ========== REALIZAR PREDICCIÓN ==========
 if predecir:
     if modelo_rf is None:
-        st.error("❌ Error: No se pudieron cargar los modelos. Verifica que los archivos .pkl estén en la carpeta 'modelos'")
+        st.error("❌ Error: El sistema no puede cargar los modelos. Contacta al gremio.")
     else:
-        # Crear array con las características en el orden correcto
         features = np.array([[
             age, sex, cp, trestbps, chol, fbs, restecg, 
             thalach, exang, oldpeak, slope, ca, thal
         ]])
         
-        # Escalar características
         features_scaled = scaler.transform(features)
         
-        # Predicciones
         pred_rf = modelo_rf.predict(features_scaled)[0]
         pred_svm = modelo_svm.predict(features_scaled)[0]
         
-        # Probabilidades
         proba_rf = modelo_rf.predict_proba(features_scaled)[0]
         proba_svm = modelo_svm.predict_proba(features_scaled)[0]
         
         # ========== MOSTRAR RESULTADOS ==========
         st.markdown("---")
-        st.markdown("## 📋 Resultados de la Predicción")
+        st.markdown("## ⚡ RESULTADOS DEL SISTEMA ⚡")
         
         col_rf, col_svm = st.columns(2)
         
         with col_rf:
             riesgo_rf = proba_rf[1] * 100
-            color_rf = "#ff4757" if pred_rf == 1 else "#2ed573"
-            icono_rf = "⚠️" if pred_rf == 1 else "✅"
-            texto_rf = "ALTO RIESGO" if pred_rf == 1 else "BAJO RIESGO"
+            color_rf = "#ff0055" if pred_rf == 1 else "#00ffff"
+            icono_rf = "☠️" if pred_rf == 1 else "✅"
+            texto_rf = "NIVEL: AMENAZA" if pred_rf == 1 else "NIVEL: SEGURO"
             
             st.markdown(f"""
-            <div class="result-card" style="background: linear-gradient(135deg, {color_rf}dd, {color_rf}99);">
-                <div class="result-title">🌲 Random Forest {icono_rf}</div>
-                <div class="result-value">{texto_rf}</div>
-                <div class="probability">Probabilidad de enfermedad: <b>{riesgo_rf:.1f}%</b></div>
-                <div style="font-size:14px; margin-top:15px;">
-                    {"🔴 Se recomienda consultar a un especialista" if pred_rf == 1 else "🟢 Perfil de riesgo bajo - Mantener hábitos saludables"}
+            <div class="result-card" style="border-color: {color_rf}; box-shadow: 0 0 20px {color_rf}80;">
+                <div class="result-title">🌲 RANDOM FOREST {icono_rf}</div>
+                <div class="result-value" style="color: {color_rf};">{texto_rf}</div>
+                <div class="probability">Probabilidad de ataque: <b>{riesgo_rf:.1f}%</b></div>
+                <div style="font-size:14px; margin-top:15px; color:{color_rf};">
+                    {"⚠️ Se requiere invocación de sanador ⚠️" if pred_rf == 1 else "🛡️ El cazador está a salvo 🛡️"}
                 </div>
             </div>
             """, unsafe_allow_html=True)
         
         with col_svm:
             riesgo_svm = proba_svm[1] * 100
-            color_svm = "#ff4757" if pred_svm == 1 else "#2ed573"
-            icono_svm = "⚠️" if pred_svm == 1 else "✅"
-            texto_svm = "ALTO RIESGO" if pred_svm == 1 else "BAJO RIESGO"
+            color_svm = "#ff0055" if pred_svm == 1 else "#00ffff"
+            icono_svm = "☠️" if pred_svm == 1 else "✅"
+            texto_svm = "NIVEL: AMENAZA" if pred_svm == 1 else "NIVEL: SEGURO"
             
             st.markdown(f"""
-            <div class="result-card" style="background: linear-gradient(135deg, {color_svm}dd, {color_svm}99);">
-                <div class="result-title">🤖 SVM {icono_svm}</div>
-                <div class="result-value">{texto_svm}</div>
-                <div class="probability">Probabilidad de enfermedad: <b>{riesgo_svm:.1f}%</b></div>
-                <div style="font-size:14px; margin-top:15px;">
-                    {"🔴 Se recomienda consultar a un especialista" if pred_svm == 1 else "🟢 Perfil de riesgo bajo - Mantener hábitos saludables"}
+            <div class="result-card" style="border-color: {color_svm}; box-shadow: 0 0 20px {color_svm}80;">
+                <div class="result-title">🤖 SUPPORT VECTOR MACHINE {icono_svm}</div>
+                <div class="result-value" style="color: {color_svm};">{texto_svm}</div>
+                <div class="probability">Probabilidad de ataque: <b>{riesgo_svm:.1f}%</b></div>
+                <div style="font-size:14px; margin-top:15px; color:{color_svm};">
+                    {"⚠️ Se requiere invocación de sanador ⚠️" if pred_svm == 1 else "🛡️ El cazador está a salvo 🛡️"}
                 </div>
             </div>
             """, unsafe_allow_html=True)
         
-        # Barra de probabilidad promedio
         riesgo_promedio = (riesgo_rf + riesgo_svm) / 2
+        
         st.markdown("---")
-        st.markdown("### 📊 Nivel de riesgo promedio")
+        st.markdown("### 📊 RIESGO PROMEDIO ESTIMADO POR EL SISTEMA")
         st.progress(int(riesgo_promedio))
-        st.caption(f"Riesgo cardiovascular estimado: {riesgo_promedio:.1f}%")
+        st.caption(f"**{riesgo_promedio:.1f}%** - {'⚠️ ZONA DE PELIGRO' if riesgo_promedio > 50 else '🟢 ZONA SEGURA'}")
 
 # ========== FOOTER ==========
-st.markdown("""
+st.markdown(f"""
 <div class="footer">
-    <p>🔗 <a href="https://colab.research.google.com/drive/TU_ENLACE_AQUI" target="_blank" style="color:white;">Ver cuaderno en Google COLAB</a></p>
-    <p><strong>Nombre:</strong> Neil Pariona | <strong>Código ISIL:</strong> TU_CODIGO</p>
-    <p style="font-size:12px; opacity:0.7;">Modelos entrenados con Heart Disease UCI Dataset | Random Forest & SVM</p>
+    <p>🔗 <a href="https://colab.research.google.com/drive/1uo0Sb4xdyYNEVlsn71h-7_QYlIFdNIPP?usp=sharing" target="_blank" style="color:cyan;">📓 ACCEDER AL CUADERNO DEL GREMIO (COLAB)</a></p>
+    <p><strong>🏷️ CAZADOR:</strong> Neil Pariona | <strong>🆔 CÓDIGO ISIL:</strong> 6816</p>
+    <p style="font-size:12px; opacity:0.6;">⚔️ Solo Leveling Style - Basado en Heart Disease UCI Dataset | Random Forest & SVM ⚔️</p>
 </div>
 """, unsafe_allow_html=True)
